@@ -13,24 +13,38 @@ class SSEConnection extends EventEmitter {
 
     send(message) {
         if (this.readyState !== 1) {
-            return;
+            return false;
         }
 
-        const payload = typeof message === "string" ? message : JSON.stringify(message);
-        this.res.write(`data: ${payload}\n\n`);
+        try {
+            const payload = typeof message === "string" ? message : JSON.stringify(message);
+            this.res.write(`data: ${payload}\n\n`);
+            return true;
+        } catch (error) {
+            this.emit("error", error);
+            this.close(1011, "send_failed");
+            return false;
+        }
     }
 
     sendEvent(eventName, payload) {
         if (this.readyState !== 1) {
-            return;
+            return false;
         }
 
-        if (eventName) {
-            this.res.write(`event: ${eventName}\n`);
-        }
+        try {
+            if (eventName) {
+                this.res.write(`event: ${eventName}\n`);
+            }
 
-        const data = typeof payload === "string" ? payload : JSON.stringify(payload);
-        this.res.write(`data: ${data}\n\n`);
+            const data = typeof payload === "string" ? payload : JSON.stringify(payload);
+            this.res.write(`data: ${data}\n\n`);
+            return true;
+        } catch (error) {
+            this.emit("error", error);
+            this.close(1011, "send_failed");
+            return false;
+        }
     }
 
     sendComment(comment = "ping") {

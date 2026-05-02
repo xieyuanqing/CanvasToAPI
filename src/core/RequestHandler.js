@@ -2898,13 +2898,18 @@ class RequestHandler {
                 `[Request] Cancelling request #${requestId} on session ${this._describeSession(targetSessionId)}` +
                     (requestAttemptId ? ` (attempt ${requestAttemptId})` : "")
             );
-            connection.send(
+            const delivered = connection.send(
                 JSON.stringify({
                     event_type: "cancel_request",
                     request_attempt_id: requestAttemptId,
                     request_id: requestId,
                 })
             );
+            if (delivered === false) {
+                this.logger.warn(
+                    `[Request] Cancel instruction was not delivered: browser session ${this._describeSession(targetSessionId)} is no longer writable.`
+                );
+            }
         } else {
             this.logger.warn(
                 `[Request] Unable to send cancel instruction: No available WebSocket connection for session ${this._describeSession(targetSessionId)}.`
@@ -3164,12 +3169,17 @@ class RequestHandler {
                 `[Request] Forwarding request #${proxyRequest.request_id} via session ${this._describeSession(sessionId)}` +
                     ` (attempt=${proxyRequest.request_attempt_id}, usage=${usageCount})`
             );
-            connection.send(
+            const delivered = connection.send(
                 JSON.stringify({
                     event_type: "proxy_request",
                     ...proxyRequest,
                 })
             );
+            if (delivered === false) {
+                throw new Error(
+                    `Unable to forward request: Browser session ${this._describeSession(sessionId)} is no longer writable`
+                );
+            }
         } else {
             throw new Error(
                 `Unable to forward request: No WebSocket connection found for session ${this._describeSession(sessionId)}`

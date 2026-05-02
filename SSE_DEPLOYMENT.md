@@ -81,6 +81,14 @@ Important: this does not magically switch Google accounts inside a single browse
 5. Run real smoke tests.
 6. Only after the SSE candidate is stable, stop the old service.
 
+## SSE auth protection knobs
+
+The SSE browser bootstrap endpoint has lightweight in-memory protection:
+
+- `SSE_PENDING_TOKEN_LIMIT` — maximum pending, not-yet-consumed browser tokens. Default: `100`.
+- `SSE_AUTH_RATE_LIMIT_MAX` — maximum `/browser/auth` attempts per address in the rate-limit window. Default: `30`.
+- `SSE_AUTH_RATE_LIMIT_WINDOW_MS` — rate-limit window in milliseconds. Default: `300000`.
+
 ## Known limitations
 
 - SSE token/session state is in memory; browser pages need reconnect after backend restart.
