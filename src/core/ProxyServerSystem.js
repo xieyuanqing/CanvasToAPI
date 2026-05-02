@@ -15,6 +15,7 @@ const fs = require("fs");
 const LoggingService = require("../utils/LoggingService");
 const RequestHandler = require("./RequestHandler");
 const SessionRegistry = require("./SessionRegistry");
+const SSETransport = require("./SSETransport");
 const ConfigLoader = require("../utils/ConfigLoader");
 const WebRoutes = require("../routes/WebRoutes");
 
@@ -32,6 +33,11 @@ class ProxyServerSystem extends EventEmitter {
 
         this.sessionRegistry = new SessionRegistry(this.logger, this.config);
         this.requestHandler = new RequestHandler(this, this.sessionRegistry, this.logger, this.config);
+        this.sseTransport = new SSETransport({
+            buildBrowserSessionMeta: req => this._buildBrowserSessionMeta(req),
+            logger: this.logger,
+            sessionRegistry: this.sessionRegistry,
+        });
 
         this.httpServer = null;
         this.wsServer = new WebSocket.Server({ noServer: true });
@@ -219,7 +225,12 @@ class ProxyServerSystem extends EventEmitter {
         app.use(express.static(path.join(__dirname, "..", "..", "ui", "public")));
         app.use("/locales", express.static(path.join(__dirname, "..", "..", "ui", "locales")));
 
+        app.get(["/browser/client/sse", "/canvas_sse.html"], (req, res) => {
+            res.sendFile(path.join(__dirname, "..", "..", "scripts", "client", "canvas_sse.html"));
+        });
+
         this.webRoutes.setupSession(app);
+        this.sseTransport.mount(app);
         app.use(this._createAuthMiddleware());
 
         app.get("/v1/models", (req, res) => {
@@ -386,6 +397,7 @@ class ProxyServerSystem extends EventEmitter {
 
         this.sessionRegistry.closeAllMessageQueues();
         this.sessionRegistry.closeAllConnections();
+        this.sseTransport.shutdown();
 
         const closeServer = (server, name) =>
             new Promise(resolve => {

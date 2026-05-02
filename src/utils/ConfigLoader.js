@@ -139,7 +139,8 @@ class ConfigLoader {
     _printConfiguration(config) {
         this.logger.info("================ [ Active Configuration ] ================");
         this.logger.info(`  HTTP Server Port: ${config.httpPort}`);
-        this.logger.info(`  Browser WebSocket Path: ${config.browserWsPath}`);
+        this.logger.info(`  Legacy WebSocket Path: ${config.browserWsPath}`);
+        this.logger.info("  Browser SSE Routes: /browser/auth, /browser/events/:token, /browser/messages");
         this.logger.info(`  Listening Address: ${config.host}`);
         this.logger.info(`  Streaming Mode: ${config.streamingMode}`);
         this.logger.info(`  Session Selection: ${config.sessionSelectionStrategy}`);

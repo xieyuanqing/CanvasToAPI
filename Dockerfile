@@ -40,15 +40,18 @@ COPY src ./src
 COPY configs ./configs
 COPY ui/public ./ui/public
 COPY ui/locales ./ui/locales
+COPY scripts/client/canvas_sse.html ./scripts/client/canvas_sse.html
 COPY --from=ui-builder /app/ui/dist ./ui/dist
 
 USER node
 
-EXPOSE 7861
+EXPOSE 7862
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    PORT=7862 \
+    HOST=0.0.0.0
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "const port = process.env.PORT || 7861; require('http').get('http://localhost:' + port + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1));" || exit 1
+    CMD node -e "const port = process.env.PORT || 7862; require('http').get('http://localhost:' + port + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1));" || exit 1
 
 CMD ["node", "main.js"]

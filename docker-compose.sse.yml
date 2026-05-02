@@ -1,0 +1,35 @@
+services:
+  canvas-to-api-sse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: sse-demo
+    image: canvas-to-api-sse:local
+    container_name: canvas-to-api-sse
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HOST_PORT:-7862}:7862"
+    environment:
+      PORT: 7862
+      HOST: 0.0.0.0
+      TZ: ${TZ:-Asia/Shanghai}
+      API_KEYS: ${API_KEYS:-123456}
+      STREAMING_MODE: ${STREAMING_MODE:-fake}
+      ROUND: ${ROUND:-round}
+      SESSION_ERROR_THRESHOLD: ${SESSION_ERROR_THRESHOLD:-3}
+      MAX_RETRIES: ${MAX_RETRIES:-3}
+      RETRY_DELAY: ${RETRY_DELAY:-2000}
+      FORCE_THINKING: ${FORCE_THINKING:-false}
+      FORCE_WEB_SEARCH: ${FORCE_WEB_SEARCH:-false}
+      FORCE_URL_CONTEXT: ${FORCE_URL_CONTEXT:-false}
+    networks:
+      default:
+      onepanel:
+        aliases:
+          - canvas-to-api-sse
+
+networks:
+  onepanel:
+    external: true
+    name: 1panel-network

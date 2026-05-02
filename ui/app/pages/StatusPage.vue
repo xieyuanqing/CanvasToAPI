@@ -1360,11 +1360,10 @@ const browserConnectedText = computed(() =>
 const browserConnectedClass = computed(() => (activeSessionCount.value > 0 ? "status-ok" : "status-error"));
 const browserWsEndpointText = computed(() => {
     if (typeof window === "undefined") {
-        return state.browserWsPath || "/ws";
+        return "/";
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${protocol}//${window.location.host}${state.browserWsPath || "/ws"}`;
+    return window.location.origin;
 });
 const selectionStrategyText = computed(() =>
     state.selectionStrategy === "random" ? t("selectionStrategyRandom") : t("selectionStrategyRound")

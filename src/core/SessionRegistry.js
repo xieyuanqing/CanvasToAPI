@@ -64,8 +64,7 @@ class SessionRegistry extends EventEmitter {
 
         ws.on("message", data => this._handleIncomingMessage(data.toString(), connectionId));
         ws.on("close", (code, reasonBuffer) => {
-            const reason =
-                typeof reasonBuffer === "string" ? reasonBuffer : Buffer.from(reasonBuffer || []).toString("utf8");
+            const reason = this._normalizeCloseReason(reasonBuffer, code);
             this.removeConnection(connectionId, reason || `socket_closed_${code || "unknown"}`);
         });
         ws.on("error", error => {
@@ -557,6 +556,22 @@ class SessionRegistry extends EventEmitter {
         if (ws.readyState === 0 || ws.readyState === 1) {
             ws.close(code, reason);
         }
+    }
+
+    _normalizeCloseReason(reasonBuffer, code) {
+        if (typeof reasonBuffer === "string") {
+            return reasonBuffer;
+        }
+
+        if (Buffer.isBuffer(reasonBuffer) || Array.isArray(reasonBuffer)) {
+            return Buffer.from(reasonBuffer || []).toString("utf8");
+        }
+
+        if (reasonBuffer && typeof reasonBuffer === "object" && "toString" in reasonBuffer) {
+            return String(reasonBuffer);
+        }
+
+        return `socket_closed_${code || "unknown"}`;
     }
 
     _clearAuthTimeout(entry) {
