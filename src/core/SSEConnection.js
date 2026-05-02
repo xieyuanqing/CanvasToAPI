@@ -13,7 +13,7 @@ class SSEConnection extends EventEmitter {
 
     send(message) {
         if (this.readyState !== 1) {
-            throw new Error("SSE connection is not open");
+            return;
         }
 
         const payload = typeof message === "string" ? message : JSON.stringify(message);
@@ -22,7 +22,7 @@ class SSEConnection extends EventEmitter {
 
     sendEvent(eventName, payload) {
         if (this.readyState !== 1) {
-            throw new Error("SSE connection is not open");
+            return;
         }
 
         if (eventName) {
