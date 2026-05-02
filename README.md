@@ -1,8 +1,13 @@
 > 如果想尝试一体化部署，请使用 [integrated 分支](https://github.com/iBUHub/CanvasToAPI/tree/integrated)；另外 Gemini cookie 过期很快。
 
-# Gemini Canvas to API Adapter
+# Gemini Canvas to API Adapter (SSE Edition)
 
 中文文档 | [English](README_EN.md)
+
+> ⚠️ **这是一个专门的 SSE 独立分支（二改项目）**：
+> 本项目将原版浏览器客户端与服务端的通信方式从 WebSocket 替换为了 HTTP Server-Sent Events (SSE)。
+> 这种方式能更好地穿透企业防火墙，并且在使用 Nginx / Cloudflare 等反向代理时，不会因为意外断开 WebSocket 长连接而导致会话丢失。
+
 
 一个将 Gemini 网页会话封装为兼容 OpenAI API、Gemini API 和 Anthropic API 的工具。服务端负责提供 API 接口和请求调度，实际浏览器会话需要由用户手动打开指定 Gemini 分享页，与服务端建立连接后才能处理请求。
 
@@ -29,7 +34,7 @@
 2. 配置环境变量：
 
    ```bash
-   cp .env.example .env
+   cp .env.sse.example .env
    ```
 
    至少建议设置：
@@ -46,20 +51,20 @@
 
 4. 打开控制台：
 
-   访问 `http://localhost:7861`，使用 `API_KEYS`（或你配置的控制台账号密码）登录。
+   访问 `http://localhost:7862`，使用 `API_KEYS`（或你配置的控制台账号密码）登录。
 
 5. 手动建立浏览器会话：
 
    在需要承载 Gemini 会话的浏览器中打开：[https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50)
 
-   如果分享链接已过期，请直接打开 Gemini 页面，启用 Canvas，然后将 [scripts/client/canvas.html](scripts/client/canvas.html) 中的内容粘贴进去新建一个 Canvas。
+   如果分享链接已过期，请直接打开 Gemini 页面，启用 Canvas，然后将 [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html) 中的内容粘贴进去新建一个 Canvas。
 
    打开后请手动填写：
-   - `Server WS Endpoint`：本地部署填写 `ws://127.0.0.1:7861/ws`
+   - `Server Endpoint`：本地部署填写 `http://127.0.0.1:7862`
    - `API Key`：填写与请求时相同的 `API_KEYS` 中任意一个 key
    - `Browser Identifier`：浏览器标志，可自定义；留空时页面会自动生成每日标志
 
-   如果你使用 Chrome 作为浏览器端，请先在地址栏输入 `chrome://flags/#local-network-access-check`，将该项改为 `Disabled`，再通过 `ws://127.0.0.1:7861/ws` 连接本地服务端。
+   如果你使用 Chrome 作为浏览器端，请先在地址栏输入 `chrome://flags/#local-network-access-check`，将该项改为 `Disabled`，再通过 `http://127.0.0.1:7862` 连接本地服务端。
 
    填写完成后点击 `保存` 再点击 `连接`。连接成功后，回到状态页确认 `浏览器会话` 中已有在线会话。
 
@@ -82,7 +87,7 @@
 ```bash
 docker run -d \
   --name canvas-to-api \
-  -p 7861:7861 \
+  -p 7862:7862 \
   -e API_KEYS=your-api-key \
   -e TZ=Asia/Shanghai \
   --restart unless-stopped \
@@ -93,7 +98,7 @@ docker run -d \
 
 参数说明：
 
-- `-p 7861:7861`：HTTP API 与控制台端口
+- `-p 7862:7862`：HTTP API 与控制台端口
 - `-e API_KEYS`：客户端访问 API 和控制台时使用的密钥
 - `-e TZ=Asia/Shanghai`：日志和页面显示时间的时区（可选）
 
@@ -109,7 +114,7 @@ services:
     image: ghcr.io/ibuhub/canvas-to-api:latest
     container_name: canvas-to-api
     ports:
-      - 7861:7861
+      - 7862:7862
     restart: unless-stopped
     environment:
       API_KEYS: your-api-key
@@ -131,7 +136,7 @@ services:
    ```bash
    docker run -d \
      --name canvas-to-api \
-     -p 7861:7861 \
+     -p 7862:7862 \
      -e API_KEYS=your-api-key \
      -e TZ=Asia/Shanghai \
      --restart unless-stopped \
@@ -142,9 +147,9 @@ services:
 
 容器启动后，仍然需要手动打开以下页面建立浏览器会话：[https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50)
 
-如果该分享链接已过期，请直接前往 Gemini 页面，开启 Canvas，并将 [scripts/client/canvas.html](scripts/client/canvas.html) 中的内容粘贴进去新建一个 Canvas。
+如果该分享链接已过期，请直接前往 Gemini 页面，开启 Canvas，并将 [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html) 中的内容粘贴进去新建一个 Canvas。
 
-页面中需要手动填写浏览器标志（`Browser Identifier`）、API Key，以及服务端 WebSocket 地址（`Server WS Endpoint`，例如 `ws://127.0.0.1:7861/ws` 或 `wss://your-host/ws`）。其中 API Key 请填写与请求时相同的 key。连接建立成功后，状态页会显示在线浏览器会话，之后 API 请求才会被转发。
+页面中需要手动填写浏览器标志（`Browser Identifier`）、API Key，以及服务端 WebSocket 地址（`Server Endpoint`，例如 `http://127.0.0.1:7862` 或 `https://your-host`）。其中 API Key 请填写与请求时相同的 key。连接建立成功后，状态页会显示在线浏览器会话，之后 API 请求才会被转发。
 
 #### 🌐 步骤 3（可选）：使用 Nginx 反向代理
 
@@ -196,7 +201,7 @@ services:
 | `API_KEYS`                  | 用于 API 鉴权的密钥列表，多个值使用逗号分隔；同时也是默认的控制台登录密码来源。                                  | `123456`             |
 | `WEB_CONSOLE_USERNAME`      | 网页控制台登录用户名（可选）。如果与密码同时设置，则登录时需要输入两者。                                         | 无                   |
 | `WEB_CONSOLE_PASSWORD`      | 网页控制台登录密码（可选）。如果只设置密码，则控制台只要求输入密码；如果两者都不设置，则回退到 `API_KEYS` 登录。 | 无                   |
-| `PORT`                      | HTTP API 与控制台端口。                                                                                          | `7861`               |
+| `PORT`                      | HTTP API 与控制台端口。                                                                                          | `7862`               |
 | `HOST`                      | HTTP 服务和 WebSocket 服务监听地址。                                                                             | `0.0.0.0`            |
 | `ICON_URL`                  | 控制台 favicon 地址，支持 ICO、PNG、SVG 等格式。                                                                 | `/AIStudio_logo.svg` |
 | `SECURE_COOKIES`            | 是否启用仅 HTTPS 可用的安全 Cookie。                                                                             | `false`              |
@@ -231,9 +236,9 @@ services:
 1. 启动服务端，并确保 `PORT` 能被建立会话的浏览器访问到。
 2. 打开控制台查看当前浏览器会话连接地址和连接状态。
 3. 在浏览器中打开 [https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50)。
-   如果该分享链接已失效，请前往 Gemini 页面，开启 Canvas，并使用 [scripts/client/canvas.html](scripts/client/canvas.html) 里的内容新建一个 Canvas。
-4. 在页面中填写浏览器标志（`Browser Identifier`）、API Key，以及服务端 WebSocket 地址（`Server WS Endpoint`）。
-5. `API Key` 请填写与你请求 API 时相同的 key；`Server WS Endpoint` 本地可填写 `ws://127.0.0.1:7861/ws`，如果控制台是通过 `https://` 访问的远程服务，则应填写 `wss://你的域名或公网地址/ws`。
+   如果该分享链接已失效，请前往 Gemini 页面，开启 Canvas，并使用 [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html) 里的内容新建一个 Canvas。
+4. 在页面中填写浏览器标志（`Browser Identifier`）、API Key，以及服务端 WebSocket 地址（`Server Endpoint`）。
+5. `API Key` 请填写与你请求 API 时相同的 key；`Server Endpoint` 本地可填写 `http://127.0.0.1:7862`，如果控制台是通过 `https://` 访问的远程服务，则应填写 `wss://你的域名或公网地址/ws`。
    如果你使用 Chrome 作为浏览器端，请先在地址栏输入 `chrome://flags/#local-network-access-check`，将该项改为 `Disabled`，再通过本地 `ws://` 地址连接服务端。
 6. 等待状态页出现在线会话后，再开始调用 API。
 

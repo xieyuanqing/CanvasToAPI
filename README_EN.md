@@ -1,6 +1,6 @@
 > If you want to try the integrated deployment, please use the [integrated branch](https://github.com/iBUHub/CanvasToAPI/tree/integrated). Also, Gemini cookies expire quickly.
 
-# Gemini Canvas to API Adapter
+# Gemini Canvas to API Adapter (SSE Edition)
 
 [中文文档](README.md) | English
 
@@ -29,7 +29,7 @@ A tool that exposes a Gemini web session as OpenAI API, Gemini API, and Anthropi
 2. Configure environment variables:
 
    ```bash
-   cp .env.example .env
+   cp .env.sse.example .env
    ```
 
    At minimum, set:
@@ -46,20 +46,20 @@ A tool that exposes a Gemini web session as OpenAI API, Gemini API, and Anthropi
 
 4. Open the console:
 
-   Visit `http://localhost:7861` and log in with `API_KEYS` or your configured console credentials.
+   Visit `http://localhost:7862` and log in with `API_KEYS` or your configured console credentials.
 
 5. Manually connect a browser session:
 
    Open this page in the browser that should carry the Gemini session: [https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50)
 
-   If the shared Gemini link has expired, open Gemini directly, enable Canvas, and create a new Canvas by pasting in the contents of [scripts/client/canvas.html](scripts/client/canvas.html).
+   If the shared Gemini link has expired, open Gemini directly, enable Canvas, and create a new Canvas by pasting in the contents of [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html).
 
    Fill in:
-   - `Server WS Endpoint`: `ws://127.0.0.1:7861/ws` for local use
+   - `Server Endpoint`: `http://127.0.0.1:7862` for local use
    - `API Key`: enter the same key you use for API requests
    - `Browser Identifier`: an optional browser tag; if left blank, the page auto-generates a daily identifier
 
-   If you use Chrome as the browser client, first open `chrome://flags/#local-network-access-check` in the address bar, set it to `Disabled`, and then connect to the local server with `ws://127.0.0.1:7861/ws`.
+   If you use Chrome as the browser client, first open `chrome://flags/#local-network-access-check` in the address bar, set it to `Disabled`, and then connect to the local server with `http://127.0.0.1:7862`.
 
    Then click `Save` and click `Connect`. Once connected, confirm that `Browser Sessions` shows at least one online session in the status page.
 
@@ -82,7 +82,7 @@ A tool that exposes a Gemini web session as OpenAI API, Gemini API, and Anthropi
 ```bash
 docker run -d \
   --name canvas-to-api \
-  -p 7861:7861 \
+  -p 7862:7862 \
   -e API_KEYS=your-api-key \
   -e TZ=America/New_York \
   --restart unless-stopped \
@@ -93,7 +93,7 @@ docker run -d \
 
 Parameters:
 
-- `-p 7861:7861`: HTTP API and web console port
+- `-p 7862:7862`: HTTP API and web console port
 - `-e API_KEYS`: API and console access key
 - `-e TZ=America/New_York`: Time zone for logs and UI timestamps (optional)
 
@@ -109,7 +109,7 @@ services:
     image: ghcr.io/ibuhub/canvas-to-api:latest
     container_name: canvas-to-api
     ports:
-      - 7861:7861
+      - 7862:7862
     restart: unless-stopped
     environment:
       API_KEYS: your-api-key
@@ -131,7 +131,7 @@ If you prefer to build the Docker image yourself, use the following commands:
    ```bash
    docker run -d \
      --name canvas-to-api \
-     -p 7861:7861 \
+     -p 7862:7862 \
      -e API_KEYS=your-api-key \
      -e TZ=America/New_York \
      --restart unless-stopped \
@@ -142,9 +142,9 @@ If you prefer to build the Docker image yourself, use the following commands:
 
 After the container starts, you still need to manually open the following page and connect a browser session: [https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50)
 
-If the shared link has expired, go to Gemini directly, enable Canvas, and create a new Canvas by pasting in the contents of [scripts/client/canvas.html](scripts/client/canvas.html).
+If the shared link has expired, go to Gemini directly, enable Canvas, and create a new Canvas by pasting in the contents of [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html).
 
-On that page, manually enter the browser tag (`Browser Identifier`), API key, and the server WebSocket address (`Server WS Endpoint`), for example `ws://127.0.0.1:7861/ws` or `wss://your-host/ws`. The API key should be the same one you use for API requests. Once the browser session is connected, the status page will show it as online and the API can begin forwarding requests.
+On that page, manually enter the browser tag (`Browser Identifier`), API key, and the server WebSocket address (`Server Endpoint`), for example `http://127.0.0.1:7862` or `https://your-host`. The API key should be the same one you use for API requests. Once the browser session is connected, the status page will show it as online and the API can begin forwarding requests.
 
 #### 🌐 Step 3 (Optional): Nginx Reverse Proxy
 
@@ -196,7 +196,7 @@ Deploy directly on Claw Cloud Run, a fully managed container platform.
 | `API_KEYS`                  | Comma-separated API keys used for API authentication; also used as the default console login secret when no dedicated console credentials are provided. | `123456`             |
 | `WEB_CONSOLE_USERNAME`      | Username for web console login (optional). If set together with password, both are required.                                                            | None                 |
 | `WEB_CONSOLE_PASSWORD`      | Password for web console login (optional). If only this is set, the console asks for password only. Otherwise it falls back to `API_KEYS`.              | None                 |
-| `PORT`                      | HTTP API and web console port.                                                                                                                          | `7861`               |
+| `PORT`                      | HTTP API and web console port.                                                                                                                          | `7862`               |
 | `HOST`                      | Listening address for both HTTP and WebSocket services.                                                                                                 | `0.0.0.0`            |
 | `ICON_URL`                  | Custom favicon URL for the console. Supports ICO, PNG, SVG, etc.                                                                                        | `/AIStudio_logo.svg` |
 | `SECURE_COOKIES`            | Enable secure cookies for HTTPS-only console sessions.                                                                                                  | `false`              |
@@ -231,9 +231,9 @@ The current version no longer uses local `auth` files or a `setup-auth` bootstra
 1. Start the server and make sure `PORT` is reachable from the browser that will carry the session.
 2. Open the console and check the browser-session endpoint and connection status.
 3. Open [https://gemini.google.com/share/0e87cc62be50](https://gemini.google.com/share/0e87cc62be50) in a browser.
-   If that shared link is no longer available, go to Gemini, turn on Canvas, and create a new Canvas with the contents of [scripts/client/canvas.html](scripts/client/canvas.html).
-4. Enter the browser identifier (`Browser Identifier`), API key, and the server WebSocket endpoint (`Server WS Endpoint`) on that page.
-5. Use the same API key that you use for API requests. For local deployments, `Server WS Endpoint` can be `ws://127.0.0.1:7861/ws`. If the console is accessed through `https://` on a remote server, it should be `wss://your-domain-or-public-address/ws`.
+   If that shared link is no longer available, go to Gemini, turn on Canvas, and create a new Canvas with the contents of [scripts/client/canvas_sse.html](scripts/client/canvas_sse.html).
+4. Enter the browser identifier (`Browser Identifier`), API key, and the server WebSocket endpoint (`Server Endpoint`) on that page.
+5. Use the same API key that you use for API requests. For local deployments, `Server Endpoint` can be `http://127.0.0.1:7862`. If the console is accessed through `https://` on a remote server, it should be `wss://your-domain-or-public-address/ws`.
    If you use Chrome as the browser client, first open `chrome://flags/#local-network-access-check` in the address bar, set it to `Disabled`, and then connect to the local server through the local `ws://` endpoint.
 6. Wait until the status page shows at least one online browser session before sending API traffic.
 
